@@ -33,6 +33,9 @@ return [
             'urlRules' => [],
             //'enableUnconfirmedLogin' => true
         ],
+        'cms' => [
+            'class' => 'app\modules\cms\Module',
+        ],
     ],
     'components' => [
         'request' => [
