@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.7.19, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.8, for Win32 (x86)
 --
--- Host: localhost    Database: yii2constructor
+-- Host: localhost    Database: netpage
 -- ------------------------------------------------------
--- Server version	5.7.19-0ubuntu0.16.04.1
+-- Server version	5.5.8
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -14,6 +14,35 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `area_templates`
+--
+
+DROP TABLE IF EXISTS `area_templates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `area_templates` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `is_deleted` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N' COMMENT 'Признак, что запись удалена',
+  `template_id` int(11) NOT NULL COMMENT 'Указатель на шаблон в котором эта зона находится',
+  `area` varchar(64) COLLATE utf8_unicode_ci NOT NULL COMMENT 'Зона в виде {$NAME}, например {$A}, {$TOP}, {$NEWS}',
+  `description` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Описание',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unq_area_templates_1` (`is_deleted`,`template_id`,`area`),
+  KEY `fk_area_templates_1` (`template_id`),
+  CONSTRAINT `fk_area_templates_1` FOREIGN KEY (`template_id`) REFERENCES `templates` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Привязка зон внутри шаблона к шаблону страницы сайта';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `area_templates`
+--
+
+LOCK TABLES `area_templates` WRITE;
+/*!40000 ALTER TABLE `area_templates` DISABLE KEYS */;
+/*!40000 ALTER TABLE `area_templates` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `auth_assignment`
@@ -123,6 +152,96 @@ LOCK TABLES `auth_rule` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `component_areas`
+--
+
+DROP TABLE IF EXISTS `component_areas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `component_areas` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `area_id` int(11) NOT NULL COMMENT 'Указатель на зону внутри файла-шаблона',
+  `component_id` int(11) NOT NULL COMMENT 'Указатель на компоненту',
+  `view_style_id` int(11) NOT NULL COMMENT 'Указатель на стиль отображения компоненты в данной зоне данного шаблоа',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unq_component_areas_1` (`area_id`,`component_id`),
+  KEY `fk_component_areas_2` (`component_id`),
+  KEY `fk_component_areas_3` (`view_style_id`),
+  CONSTRAINT `fk_component_areas_3` FOREIGN KEY (`view_style_id`) REFERENCES `component_views` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_component_areas_1` FOREIGN KEY (`area_id`) REFERENCES `components` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_component_areas_2` FOREIGN KEY (`component_id`) REFERENCES `area_templates` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Связка компоненты и зоны';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `component_areas`
+--
+
+LOCK TABLES `component_areas` WRITE;
+/*!40000 ALTER TABLE `component_areas` DISABLE KEYS */;
+/*!40000 ALTER TABLE `component_areas` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `component_views`
+--
+
+DROP TABLE IF EXISTS `component_views`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `component_views` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `component_id` int(11) NOT NULL COMMENT 'Указатель на компоненту',
+  `view_style` enum('one','list') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'one' COMMENT 'Стиль отображения (ONE - одна запись, LIT - список записей)',
+  `filename` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Имя файла-шаблона',
+  `description` varchar(255) COLLATE utf8_unicode_ci NOT NULL COMMENT 'Описание',
+  PRIMARY KEY (`id`),
+  KEY `component_views` (`component_id`),
+  CONSTRAINT `component_views` FOREIGN KEY (`component_id`) REFERENCES `components` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Варианты отображений компонент';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `component_views`
+--
+
+LOCK TABLES `component_views` WRITE;
+/*!40000 ALTER TABLE `component_views` DISABLE KEYS */;
+/*!40000 ALTER TABLE `component_views` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `components`
+--
+
+DROP TABLE IF EXISTS `components`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `components` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `is_active` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N' COMMENT 'Признак, что компонент отключен',
+  `name` varchar(128) COLLATE utf8_unicode_ci NOT NULL COMMENT 'Название компоненты',
+  `version` varchar(15) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Версия компоненты в виде x.x.x.x',
+  `author` varchar(64) COLLATE utf8_unicode_ci NOT NULL COMMENT 'Автор компоненты',
+  `createdatetime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Дата и время добавления компоненты',
+  `createuserid` int(11) NOT NULL COMMENT 'Указатель на пользователя добавившего компоненту',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unq_components_1` (`name`),
+  KEY `fk_components_1` (`createuserid`),
+  CONSTRAINT `fk_components_1` FOREIGN KEY (`createuserid`) REFERENCES `user` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Компоненты';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `components`
+--
+
+LOCK TABLES `components` WRITE;
+/*!40000 ALTER TABLE `components` DISABLE KEYS */;
+/*!40000 ALTER TABLE `components` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `migration`
 --
 
@@ -213,6 +332,32 @@ LOCK TABLES `social_account` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `templates`
+--
+
+DROP TABLE IF EXISTS `templates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `templates` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `is_deleted` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N' COMMENT 'Признак, что запись удалена',
+  `filename` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Имя файла',
+  `description` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Описание',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unq_template_1` (`filename`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Шаблоны страниц сайта';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `templates`
+--
+
+LOCK TABLES `templates` WRITE;
+/*!40000 ALTER TABLE `templates` DISABLE KEYS */;
+/*!40000 ALTER TABLE `templates` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `token`
 --
 
@@ -237,6 +382,36 @@ LOCK TABLES `token` WRITE;
 /*!40000 ALTER TABLE `token` DISABLE KEYS */;
 INSERT INTO `token` VALUES (1,'zG7DPiit8mBG9lfO4at9-O5OwE8P1WZA',1503672270,0);
 /*!40000 ALTER TABLE `token` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `url_templates`
+--
+
+DROP TABLE IF EXISTS `url_templates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `url_templates` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `template_id` int(11) NOT NULL COMMENT 'Указатель на шаблон в котором эта зона находится',
+  `is_deleted` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N' COMMENT 'Признак, что запись удалена',
+  `is_regexp` enum('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N' COMMENT 'Признак, что URL является регулярным выражением',
+  `url` varchar(128) COLLATE utf8_unicode_ci NOT NULL COMMENT 'URL (можно использовать регулярное выражение)',
+  `description` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Описание',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unq_url_template_1` (`is_deleted`,`url`),
+  KEY `fk_url_templates_1` (`template_id`),
+  CONSTRAINT `fk_url_templates_1` FOREIGN KEY (`template_id`) REFERENCES `templates` (`id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='Привязка URL к шаблону страницы сайта';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `url_templates`
+--
+
+LOCK TABLES `url_templates` WRITE;
+/*!40000 ALTER TABLE `url_templates` DISABLE KEYS */;
+/*!40000 ALTER TABLE `url_templates` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -286,4 +461,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-08-25 22:19:23
+-- Dump completed on 2017-08-28 22:01:33
